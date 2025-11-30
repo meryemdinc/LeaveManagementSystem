@@ -23,6 +23,8 @@ namespace LeaveManagement.API
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
+
             app.UseAuthorization();
 
 
