@@ -10,10 +10,12 @@ namespace LeaveManagement.Application.Contracts.Persistence
 {
     public interface IGenericRepository<T> where T : BaseEntity
     {
-        Task<IReadOnlyList<T>> GetAllAsync();
+        IQueryable<T> GetAll();
+
         Task<T> GetByIdAsync(int id);
-        Task CreateAsync(T entity);
-        Task UpdateAsync(T entity);
-        Task DeleteAsync(T entity);
+
+        Task AddAsync(T entity); 
+        void Update(T entity);
+        void Delete(T entity);
     }
 }
