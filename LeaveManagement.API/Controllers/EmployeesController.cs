@@ -4,6 +4,7 @@ using LeaveManagement.Application.DTOs.Employee;
 using LeaveManagement.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 
 namespace LeaveManagement.API.Controllers
 {
@@ -43,7 +44,7 @@ namespace LeaveManagement.API.Controllers
         // Şifre hashleme vb. işlemleri Identity kısmında yapacağız, şimdilik düz kaydediyoruz.
         employee.PasswordHash = employeeDto.Password;
 
-        await _employeeRepository.CreateAsync(employee);
+        await _employeeRepository.AddAsync(employee);
 
         return Ok(employee.Id); // Oluşan çalışanın ID'sini döner
     }
@@ -51,7 +52,7 @@ namespace LeaveManagement.API.Controllers
     [HttpGet]
     public async Task<ActionResult> GetAll()
     {
-        var employees = await _employeeRepository.GetAllAsync();
+        var employees = await  _employeeRepository.GetAll().ToListAsync();
         return Ok(employees);
     } }
 }
