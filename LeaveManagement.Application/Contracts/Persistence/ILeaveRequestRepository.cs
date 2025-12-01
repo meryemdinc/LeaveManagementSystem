@@ -11,5 +11,7 @@ namespace LeaveManagement.Application.Contracts.Persistence
     {
         Task<List<LeaveRequest>> GetLeaveRequestsWithDetails(); // Çalışan bilgisiyle beraber getir
         Task<List<LeaveRequest>> GetLeaveRequestsWithDetails(int id);
+
+        Task<List<LeaveRequest>> GetLeaveRequestsOfEmployee(int employeeId); // İsimlendirmeyi böyle yapalım.
     }
 }
