@@ -6,6 +6,8 @@ using LeaveManagement.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using LeaveManagement.Domain.Enums;
+using LeaveManagement.Infrastructure.Repositories;
 
 namespace LeaveManagement.API.Controllers
 {
@@ -97,7 +99,7 @@ namespace LeaveManagement.API.Controllers
             // --------------------------------
 
             // 4. KAYDET
-            await _leaveRequestRepository.CreateAsync(leaveRequest);
+            await _leaveRequestRepository.AddAsync(leaveRequest);
 
             return CreatedAtAction(nameof(Get), new { id = leaveRequest.Id }, leaveRequest);
         }
@@ -118,5 +120,38 @@ namespace LeaveManagement.API.Controllers
         }
 
 
+
+        // PUT: api/LeaveRequests/ChangeApproval/5   Bu metodu sadece Admin rolüne
+        // sahip olanlar çalıştırabilecek.
+        [HttpPut("ChangeApproval/{id}")]
+    [Authorize(Roles = "Admin")] 
+    public async Task<ActionResult> ChangeApproval(int id, [FromBody] ChangeLeaveRequestApprovalDto changeLeaveRequestApprovalDto)
+    {
+        // 1. İzin talebini veritabanından bul
+        var leaveRequest = await _leaveRequestRepository.GetByIdAsync(id);
+
+        if (leaveRequest == null)
+        {
+            return NotFound();
+        }
+
+        // 2. Durumu Güncelle
+        // Eğer Approved=true ise Status=Approved(2), değilse Status=Rejected(3) olsun.
+        if (changeLeaveRequestApprovalDto.Approved)
+        {
+            leaveRequest.Status = LeaveStatus.Approved;
+        }
+        else
+        {
+            leaveRequest.Status = LeaveStatus.Rejected;
+        }
+
+            // 3. Kaydet
+            // Repository'de UpdateAsync metodumuz vardı, onu kullanıyoruz.
+            _leaveRequestRepository.Update(leaveRequest);
+
+            return NoContent(); // 204 Döndür (İşlem başarılı ama veri dönmüyorum)
     }
+
+}
 }
