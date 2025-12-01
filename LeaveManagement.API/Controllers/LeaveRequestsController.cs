@@ -27,6 +27,16 @@ namespace LeaveManagement.API.Controllers
             _validator = validator;
         }
 
+
+        // Token'ın içindeki "uid" (User Id) bilgisini okuyan yardımcı metot
+        private int GetUserIdFromToken()
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return 0;
+            return int.Parse(userIdClaim.Value);
+        }
+
+
         // GET: api/LeaveRequests
         [HttpGet]
         [Authorize(Roles = "Admin")]
@@ -81,5 +91,7 @@ namespace LeaveManagement.API.Controllers
             // 3. Başarılı (201 Created) döndür
             return CreatedAtAction(nameof(Get), new { id = leaveRequest.Id }, leaveRequest);
         }
+
+
     }
 }
