@@ -31,8 +31,10 @@ namespace LeaveManagement.API.Controllers
         // Token'ın içindeki "uid" (User Id) bilgisini okuyan yardımcı metot
         private int GetUserIdFromToken()
         {
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "uid");
+   
             if (userIdClaim == null) return 0;
+
             return int.Parse(userIdClaim.Value);
         }
 
@@ -56,40 +58,63 @@ namespace LeaveManagement.API.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<LeaveRequestListDto>> Get(int id)
         {
-            // Detaylı veriyi çekiyoruz (Infrastructure'da yazdığımız özel metod)
-            // Not: Metod List dönüyordu, FirstOrDefault ile tekile indiriyoruz.
-            var leaveRequest = await _leaveRequestRepository.GetByIdAsync(id);
-            // Veya detaylı istiyorsak: (await _leaveRequestRepository.GetLeaveRequestsWithDetails(id)).FirstOrDefault();
+            // Generic Repository yerine, Include içeren özel metodumuzu kullanalım:
+            var leaveRequest = await _leaveRequestRepository.GetLeaveRequestsWithDetails(id);
 
             if (leaveRequest == null)
             {
-                return NotFound(); // 404 Döndür
+                return NotFound();
             }
 
             var leaveRequestDto = _mapper.Map<LeaveRequestListDto>(leaveRequest);
             return Ok(leaveRequestDto);
         }
 
+
         // POST: api/LeaveRequests
         [HttpPost]
         public async Task<ActionResult> Post([FromBody] CreateLeaveRequestDto leaveRequestDto)
         {
-            // 1. DOĞRULAMA (VALIDATION) İŞLEMİ
+            // 1. DOĞRULAMA
             var validationResult = await _validator.ValidateAsync(leaveRequestDto);
 
             if (!validationResult.IsValid)
             {
                 return BadRequest(validationResult.Errors);
             }
-            // 1. Gelen DTO'yu Entity'e çevir
+
+            // 2. MAPPING
             var leaveRequest = _mapper.Map<LeaveRequest>(leaveRequestDto);
+
+            // 3. TARİHLERİ UTC YAP
             leaveRequest.StartDate = leaveRequest.StartDate.ToUniversalTime();
-            leaveRequest.EndDate = leaveRequest.EndDate.ToUniversalTime();//tarihleri UTC formatına zorluyoruz
-            // 2. Veritabanına kaydet
+            leaveRequest.EndDate = leaveRequest.EndDate.ToUniversalTime();
+
+            // --- KRİTİK GÜVENLİK HAMLESİ ---
+            // Kullanıcı JSON içinde hangi ID'yi gönderirse göndersin,
+            // biz Token'dan okuduğumuz "gerçek" kullanıcı ID'sini basıyoruz.
+            leaveRequest.EmployeeId = GetUserIdFromToken();
+            // --------------------------------
+
+            // 4. KAYDET
             await _leaveRequestRepository.CreateAsync(leaveRequest);
 
-            // 3. Başarılı (201 Created) döndür
             return CreatedAtAction(nameof(Get), new { id = leaveRequest.Id }, leaveRequest);
+        }
+
+        // GET: api/LeaveRequests/MyLeaves
+        [HttpGet("MyLeaves")] // Adres: .../api/LeaveRequests/MyLeaves
+        [Authorize] // Herkes girebilir (Admin veya Employee)
+        public async Task<ActionResult<List<LeaveRequestListDto>>> GetMyLeaves()
+        {
+            // 1. Token'dan giriş yapan kişinin ID'sini al
+            int userId = GetUserIdFromToken();
+
+            // 2. O kişiye ait izinleri çek
+            var leaveRequests = await _leaveRequestRepository.GetLeaveRequestsOfEmployee(userId);
+
+            var leaveRequestsDto = _mapper.Map<List<LeaveRequestListDto>>(leaveRequests);
+            return Ok(leaveRequestsDto);
         }
 
 
