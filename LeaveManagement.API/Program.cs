@@ -5,9 +5,8 @@ using LeaveManagement.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
-
+using LeaveManagement.Infrastructure.Hubs;
 namespace LeaveManagement.API
 {
     public class Program
@@ -18,6 +17,7 @@ namespace LeaveManagement.API
 
             // 1. Controller'ları ekle
             builder.Services.AddControllers();
+            builder.Services.AddSignalR();
             // JWT Authentication Ayarları
             builder.Services.AddAuthentication(options =>
             {
@@ -87,6 +87,12 @@ namespace LeaveManagement.API
 
             var app = builder.Build();
 
+            app.UseCors(x => x
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    .SetIsOriginAllowed(origin => true) // localhost'a izin ver
+    .AllowCredentials()); // SignalR için Credentials şarttır!
+
             // 5. HTTP İstek Hattı (Pipeline) Ayarları
             if (app.Environment.IsDevelopment())
             {
@@ -103,7 +109,7 @@ namespace LeaveManagement.API
             app.UseAuthentication();
 
             app.UseAuthorization();
-
+            app.MapHub<NotificationHub>("/notifications"); // <-- Adresimiz bu olacak
 
             app.MapControllers();
 
