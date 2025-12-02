@@ -15,6 +15,7 @@ namespace LeaveManagement.Domain.Entities
         public string PasswordHash { get; set; } // Şifreler asla düz metin tutulmaz
         public string Role { get; set; } // "Admin" veya "Employee"
 
+        public int AnnualLeaveAllowance { get; set; } // Yıllık İzin Bakiyesi
         // Navigation Property
         // Bir çalışanın birden fazla izin talebi olabilir.
         public ICollection<LeaveRequest> LeaveRequests { get; set; }
