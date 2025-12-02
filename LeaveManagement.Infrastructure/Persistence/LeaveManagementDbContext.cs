@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
-
+using Microsoft.EntityFrameworkCore.Diagnostics;
 namespace LeaveManagement.Infrastructure.Persistence
 {
     public class LeaveManagementDbContext: DbContext
@@ -12,7 +12,15 @@ public LeaveManagementDbContext(DbContextOptions<LeaveManagementDbContext> optio
 
         public DbSet<Employee> Employees { get; set; }
         public DbSet<LeaveRequest> LeaveRequests { get; set; }
+        public DbSet<LeaveType> LeaveTypes { get; set; }
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            // PendingModelChangesWarning uyarısını susturuyoruz.
+            optionsBuilder.ConfigureWarnings(warnings =>
+                warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
 
+            base.OnConfiguring(optionsBuilder);
+        }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Bu satır, "Configurations" klasöründeki tüm IEntityTypeConfiguration 
