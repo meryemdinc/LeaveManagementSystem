@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using LeaveManagement.Application.Contracts.Persistence;
 using LeaveManagement.Application.DTOs.Employee;
 using LeaveManagement.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
-using FluentValidation;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore; // ToListAsync için
 
 namespace LeaveManagement.API.Controllers
 {
@@ -12,47 +12,52 @@ namespace LeaveManagement.API.Controllers
     [ApiController]
     public class EmployeesController : ControllerBase
     {
-        // Özel bir EmployeeRepository yazmadığımız için Generic olanı kullanıyoruz
-        private readonly IGenericRepository<Employee> _employeeRepository;
-    private readonly IMapper _mapper;
-        private readonly IValidator<CreateEmployeeDto> _validator; 
-        public EmployeesController(
-            IGenericRepository<Employee> employeeRepository,
-            IMapper mapper,
-            IValidator<CreateEmployeeDto> validator)
+        // ARTIK REPOSITORY DEĞİL, UNIT OF WORK KULLANIYORUZ
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
+        private readonly IValidator<CreateEmployeeDto> _validator;
+
+        public EmployeesController(IUnitOfWork unitOfWork, IMapper mapper, IValidator<CreateEmployeeDto> validator)
         {
-            _employeeRepository = employeeRepository;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _validator = validator;
         }
 
         [HttpPost]
-    public async Task<ActionResult> Create([FromBody] CreateEmployeeDto employeeDto)
-    {
-            // 1. DOĞRULAMA (VALIDATION) İŞLEMİ
+        public async Task<ActionResult> Create([FromBody] CreateEmployeeDto employeeDto)
+        {
+            // 1. Validasyon
             var validationResult = await _validator.ValidateAsync(employeeDto);
-
-            // Eğer kurallara uymayan bir durum varsa 400 Bad Request döndür
             if (!validationResult.IsValid)
             {
-                // Hataları listeler (Örn: "Email geçersiz", "Şifre kısa")
                 return BadRequest(validationResult.Errors);
             }
 
+            // 2. Mapping
             var employee = _mapper.Map<Employee>(employeeDto);
 
-        // Şifre hashleme vb. işlemleri Identity kısmında yapacağız, şimdilik düz kaydediyoruz.
-        employee.PasswordHash = employeeDto.Password;
+            // Şifre hashleme (Şimdilik düz metin)
+            employee.PasswordHash = employeeDto.Password;
 
-        await _employeeRepository.AddAsync(employee);
+            // Varsayılan Yıllık İzin Hakkı (Yeni başlayan birine 14 gün verelim)
+            employee.AnnualLeaveAllowance = 14;
 
-        return Ok(employee.Id); // Oluşan çalışanın ID'sini döner
+            // 3. EKLEME (Hafızaya)
+            await _unitOfWork.EmployeeRepository.AddAsync(employee);
+
+            // 4. KAYDETME (Veritabanına) - İŞTE EKSİK OLAN BUYDU!
+            await _unitOfWork.Save();
+
+            return Ok(employee.Id); // Artık gerçek ID dönecek (1, 2, 3...)
+        }
+
+        [HttpGet]
+        public async Task<ActionResult> GetAll()
+        {
+            // UnitOfWork üzerinden çekiyoruz
+            var employees = await _unitOfWork.EmployeeRepository.GetAll().ToListAsync();
+            return Ok(employees);
+        }
     }
-
-    [HttpGet]
-    public async Task<ActionResult> GetAll()
-    {
-        var employees = await  _employeeRepository.GetAll().ToListAsync();
-        return Ok(employees);
-    } }
 }
