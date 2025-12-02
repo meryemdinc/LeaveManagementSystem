@@ -30,6 +30,9 @@ namespace LeaveManagement.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AnnualLeaveAllowance")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -91,7 +94,7 @@ namespace LeaveManagement.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("LeaveType")
+                    b.Property<int>("LeaveTypeId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Reason")
@@ -113,6 +116,62 @@ namespace LeaveManagement.Infrastructure.Migrations
                     b.HasIndex("EmployeeId");
 
                     b.ToTable("LeaveRequests", (string)null);
+                });
+
+            modelBuilder.Entity("LeaveManagement.Domain.Entities.LeaveType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DefaultDays")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LeaveTypes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedDate = new DateTime(2025, 12, 1, 13, 14, 25, 268, DateTimeKind.Utc).AddTicks(1670),
+                            DefaultDays = 14,
+                            IsDeleted = false,
+                            Name = "Yıllık İzin"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedDate = new DateTime(2025, 12, 1, 13, 14, 25, 268, DateTimeKind.Utc).AddTicks(1786),
+                            DefaultDays = 5,
+                            IsDeleted = false,
+                            Name = "Mazeret İzni"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedDate = new DateTime(2025, 12, 1, 13, 14, 25, 268, DateTimeKind.Utc).AddTicks(1788),
+                            DefaultDays = 10,
+                            IsDeleted = false,
+                            Name = "Hastalık İzni"
+                        });
                 });
 
             modelBuilder.Entity("LeaveManagement.Domain.Entities.LeaveRequest", b =>
