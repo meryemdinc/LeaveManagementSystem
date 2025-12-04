@@ -34,5 +34,14 @@ namespace LeaveManagement.Infrastructure.Repositories
 
             return leaveRequests;
         }
+
+        public async Task<List<LeaveRequest>> GetLeaveRequestsOfEmployee(int employeeId)
+        {
+            var leaveRequests = await _context.LeaveRequests
+                .Include(q => q.Employee)
+                .Where(q => q.EmployeeId == employeeId) // FİLTRE BURADA
+                .ToListAsync();
+            return leaveRequests;
+        }
     }
 }
