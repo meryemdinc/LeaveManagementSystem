@@ -55,12 +55,18 @@ namespace LeaveManagement.Infrastructure.Identity
         {
             // Token'ın içine gömeceğimiz bilgiler (Claims)
             var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Email), // Konu (Subject)
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // Token ID
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), // Kullanıcı ID
-                new Claim(ClaimTypes.Role, user.Role) // Rolü (Admin/Employee)
-            };
+    {
+        // Standart E-posta (Sub)
+        new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+        
+        // --- BURASI DEĞİŞTİ ---
+        // ID'yi "uid" isminde özel bir anahtarla saklıyoruz.
+        // Karışıklığı önlemek için ClaimTypes.NameIdentifier yerine "uid" dedik.
+        new Claim("uid", user.Id.ToString()), 
+        // ----------------------
+        
+        new Claim(ClaimTypes.Role, user.Role)
+    };
 
             // İmza Anahtarı (appsettings.json'dan okuyoruz)
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Key"]));
