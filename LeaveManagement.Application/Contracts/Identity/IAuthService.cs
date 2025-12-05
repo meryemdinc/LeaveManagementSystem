@@ -10,5 +10,6 @@ namespace LeaveManagement.Application.Contracts.Identity
     public interface IAuthService
     {
         Task<AuthResponse> Login(LoginDto request);
+        Task<AuthResponse> LoginWithGoogle(string token);
     }
 }
