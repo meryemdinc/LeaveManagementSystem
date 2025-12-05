@@ -29,5 +29,21 @@ namespace LeaveManagement.API.Controllers
 
             return Ok(result);
         }
+        [HttpPost("google-login")]
+        public async Task<ActionResult<AuthResponse>> GoogleLogin([FromBody] ExternalAuthDto dto)
+        {
+            // Sadece Google isteklerini kabul et
+            if (dto.Provider != "Google") return BadRequest("Geçersiz sağlayıcı.");
+
+            // Servise sor: Bu token geçerli mi?
+            var result = await _authService.LoginWithGoogle(dto.IdToken);
+
+            if (result == null)
+            {
+                return Unauthorized("Google girişi başarısız.");
+            }
+
+            return Ok(result);
+        }
     }
 }
