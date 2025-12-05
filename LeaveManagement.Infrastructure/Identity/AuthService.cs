@@ -84,5 +84,45 @@ namespace LeaveManagement.Infrastructure.Identity
             // Token'ı string olarak oluştur
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+        // Google Simülasyonu (Gerçek Google'a gitmez, test içindir)
+        public async Task<AuthResponse> LoginWithGoogle(string googleIdToken)
+        {
+            // 1. Şifre Kontrolü: Sadece bizim bildiğimiz "MOCK_TOKEN" gelirse kabul et
+            if (googleIdToken == "MOCK_GOOGLE_TOKEN_12345")
+            {
+                // 2. Veritabanında böyle biri var mı? (Simülasyon kullanıcısı)
+                var mockEmail = "mock_google_user@gmail.com";
+                var user = await _context.Employees.FirstOrDefaultAsync(u => u.Email == mockEmail);
+
+                // 3. Yoksa Oluştur (Auto-Register)
+                if (user == null)
+                {
+                    user = new Domain.Entities.Employee
+                    {
+                        Email = mockEmail,
+                        FirstName = "Google",
+                        LastName = "User (Fake)",
+                        Role = "Employee",
+                        AnnualLeaveAllowance = 14,
+                        PasswordHash = "GoogleAuth_" + Guid.NewGuid(), // Rastgele şifre
+                        CreatedDate = DateTime.UtcNow,
+                        IsDeleted = false
+                    };
+                    await _context.Employees.AddAsync(user);
+                    await _context.SaveChangesAsync();
+                }
+
+                // 4. Token Üret ve Dön
+                return new AuthResponse
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    Token = GenerateToken(user) // Mevcut GenerateToken metodunu kullanır
+                };
+            }
+
+            // Şifre yanlışsa null dön (Giriş başarısız)
+            return null;
+        }
     }
 }
