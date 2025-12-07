@@ -4,8 +4,10 @@ using LeaveManagement.Infrastructure.Identity;
 using LeaveManagement.Infrastructure.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using LeaveManagement.Application.Contracts.Services; // Ekle
+using LeaveManagement.Application.Contracts.Services; 
 using LeaveManagement.Infrastructure.Services;
+using LeaveManagement.Application.Contracts.Infrastructure;
+
 
 namespace LeaveManagement.Infrastructure
 {
@@ -26,6 +28,8 @@ namespace LeaveManagement.Infrastructure
 
             // Auth Service Kaydı
             services.AddTransient<IAuthService, AuthService>();
+            // Email Servis Kaydı
+            services.AddTransient<IEmailSender, EmailSender>();
             // Servis Kaydı (Bu satır yoksa ekle!)
             services.AddTransient<ILeaveRequestService, LeaveRequestService>();
             return services;
