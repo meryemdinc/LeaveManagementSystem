@@ -6,6 +6,7 @@ using LeaveManagement.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore; // ToListAsync için
+using ClosedXML.Excel;
 
 namespace LeaveManagement.API.Controllers
 {
@@ -103,6 +104,64 @@ namespace LeaveManagement.API.Controllers
             await _unitOfWork.Save();
 
             return NoContent();
+        }
+
+        // GET: api/Employees/Export/Excel
+        [HttpGet("Export/Excel")]
+        public async Task<IActionResult> ExportExcel()
+        {
+            // 1. Verileri Çek
+            var employees = await _unitOfWork.EmployeeRepository.GetAll().ToListAsync();
+
+            // 2. Excel Dosyası Oluştur (Hafızada)
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Çalışanlar");
+
+                // 3. Başlıkları Yaz
+                worksheet.Cell(1, 1).Value = "ID";
+                worksheet.Cell(1, 2).Value = "Ad";
+                worksheet.Cell(1, 3).Value = "Soyad";
+                worksheet.Cell(1, 4).Value = "E-Posta";
+                worksheet.Cell(1, 5).Value = "Rol";
+                worksheet.Cell(1, 6).Value = "İzin Hakkı";
+                worksheet.Cell(1, 7).Value = "Kayıt Tarihi";
+
+                // Başlıkları Kalın Yap ve Arka Planı Boya
+                var headerRange = worksheet.Range("A1:G1");
+                headerRange.Style.Font.Bold = true;
+                headerRange.Style.Fill.BackgroundColor = XLColor.CornflowerBlue;
+                headerRange.Style.Font.FontColor = XLColor.White;
+
+                // 4. Verileri Satır Satır Yaz
+                int row = 2;
+                foreach (var emp in employees)
+                {
+                    worksheet.Cell(row, 1).Value = emp.Id;
+                    worksheet.Cell(row, 2).Value = emp.FirstName;
+                    worksheet.Cell(row, 3).Value = emp.LastName;
+                    worksheet.Cell(row, 4).Value = emp.Email;
+                    worksheet.Cell(row, 5).Value = emp.Role;
+                    worksheet.Cell(row, 6).Value = emp.AnnualLeaveAllowance;
+                    worksheet.Cell(row, 7).Value = emp.CreatedDate.ToShortDateString();
+                    row++;
+                }
+
+                // 5. Sütun Genişliklerini Otomatik Ayarla
+                worksheet.Columns().AdjustToContents();
+
+                // 6. Dosyayı Stream Olarak Döndür
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+
+                    return File(
+                        content,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"Calisanlar_{DateTime.Now:yyyyMMdd_HHmm}.xlsx");
+                }
+            }
         }
     }
 }
