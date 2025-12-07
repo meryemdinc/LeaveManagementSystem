@@ -8,6 +8,8 @@ using LeaveManagement.Domain.Entities;
 using LeaveManagement.Domain.Enums;
 using Microsoft.AspNetCore.SignalR;
 using LeaveManagement.Infrastructure.Hubs;
+using LeaveManagement.Application.Contracts.Infrastructure;
+using LeaveManagement.Application.DTOs.Email;
 
 namespace LeaveManagement.Infrastructure.Services
 {
@@ -16,12 +18,13 @@ namespace LeaveManagement.Infrastructure.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IHubContext<NotificationHub> _hubContext;
-
-        public LeaveRequestService(IUnitOfWork unitOfWork, IMapper mapper, IHubContext<NotificationHub> hubContext)
+        private readonly IEmailSender _emailSender;
+        public LeaveRequestService(IUnitOfWork unitOfWork, IMapper mapper, IHubContext<NotificationHub> hubContext, IEmailSender emailSender)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _hubContext = hubContext;
+            _emailSender = emailSender;
         }
 
         public async Task<Response<int>> CreateLeaveRequest(CreateLeaveRequestDto dto)
@@ -94,8 +97,30 @@ namespace LeaveManagement.Infrastructure.Services
             string message = approved ? $"İzin {id} onaylandı." : $"İzin {id} reddedildi.";
             await _hubContext.Clients.All.SendAsync("ReceiveLeaveUpdate", message);
 
+            try
+            {
+                var employee = await _unitOfWork.EmployeeRepository.GetByIdAsync(request.EmployeeId);
+                var statusText = approved ? "ONAYLANDI" : "REDDEDİLDİ";
 
-            return new Response<bool>(true, message);
+                var emailRequest = new EmailRequest
+                {
+                    To = employee.Email, // Çalışanın mail adresi
+                    Subject = $"İzin Talebiniz Sonuçlandı - {statusText}",
+                    Body = $"Merhaba {employee.FirstName},<br/><br/>" +
+                           $"{request.StartDate:dd.MM.yyyy} - {request.EndDate:dd.MM.yyyy} tarihleri arasındaki izin talebiniz <b>{statusText}</b>.<br/><br/>" +
+                           $"İyi çalışmalar.<br/>NovaLeave İK Ekibi"
+                };
+
+                await _emailSender.SendEmail(emailRequest);
+            }
+            catch
+            {
+                // Mail gönderilemezse işlem iptal olmasın, sessizce devam et
+            }
+            // ----------------------
+
+            return new Response<bool>(true, approved ? "Onaylandı" : "Reddedildi");
+        
         }
     }
 }
