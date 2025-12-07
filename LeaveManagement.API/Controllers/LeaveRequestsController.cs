@@ -70,7 +70,15 @@ namespace LeaveManagement.API.Controllers
             var leaveRequestDto = _mapper.Map<LeaveRequestListDto>(leaveRequest);
             return Ok(leaveRequestDto);
         }
-
+        // GET: api/LeaveRequests/Employee/5 (Admin, ID'si verilen personelin izinlerini görür)
+        [HttpGet("Employee/{employeeId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<List<LeaveRequestListDto>>> GetByEmployeeId(int employeeId)
+        {
+            var leaveRequests = await _leaveRequestRepository.GetLeaveRequestsOfEmployee(employeeId);
+            var leaveRequestsDto = _mapper.Map<List<LeaveRequestListDto>>(leaveRequests);
+            return Ok(leaveRequestsDto);
+        }
         // --- İŞLEM METOTLARI (Mutlaka Service Kullanmalı - Logic İçin) ---
 
         [HttpPost]
