@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using LeaveManagement.API.Middleware;
 using LeaveManagement.Infrastructure.Hubs;
 namespace LeaveManagement.API
 {
@@ -86,6 +87,8 @@ namespace LeaveManagement.API
             builder.Services.AddInfrastructureServices(builder.Configuration);
 
             var app = builder.Build();
+
+            app.UseMiddleware<ExceptionMiddleware>();
 
             app.UseCors(x => x
     .AllowAnyMethod()
