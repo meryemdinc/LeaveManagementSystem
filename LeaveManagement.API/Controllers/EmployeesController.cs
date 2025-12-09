@@ -163,5 +163,59 @@ namespace LeaveManagement.API.Controllers
                 }
             }
         }
+        // POST: api/Employees/Import/Excel
+        [HttpPost("Import/Excel")]
+        public async Task<ActionResult> ImportExcel(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("Dosya seçilmedi.");
+
+            // Excel dosyasını okumak için
+            using (var stream = new MemoryStream())
+            {
+                await file.CopyToAsync(stream);
+
+                using (var workbook = new XLWorkbook(stream))
+                {
+                    var worksheet = workbook.Worksheet(1); // İlk sayfayı al
+                    var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // Başlığı atla (Skip 1)
+
+                    foreach (var row in rows)
+                    {
+                        // Excel Sütunları:
+                        // 1: ID (Boşver)
+                        // 2: Ad, 3: Soyad, 4: Email, 5: Rol, 6: İzin Hakkı
+
+                        var email = row.Cell(4).GetValue<string>();
+
+                        // Mükerrer Kayıt Kontrolü (Aynı mail varsa atla)
+                        var exists = await _unitOfWork.EmployeeRepository.GetAll()
+                            .AnyAsync(x => x.Email == email);
+
+                        if (exists) continue; // Bu kişiyi atla, sonrakine geç
+
+                        var employee = new Employee
+                        {
+                            FirstName = row.Cell(2).GetValue<string>(),
+                            LastName = row.Cell(3).GetValue<string>(),
+                            Email = email,
+                            Role = row.Cell(5).GetValue<string>() ?? "Employee", // Boşsa Employee yap
+                            AnnualLeaveAllowance = row.Cell(6).GetValue<int>(),
+
+                            // Varsayılan Şifre: "123456" (Gerçek hayatta mail atılır)
+                            PasswordHash = "123456",
+                            CreatedDate = DateTime.UtcNow,
+                            IsDeleted = false
+                        };
+
+                        await _unitOfWork.EmployeeRepository.AddAsync(employee);
+                    }
+
+                    await _unitOfWork.Save();
+                }
+            }
+
+            return Ok(new { message = "İçe aktarım tamamlandı." });
+        }
     }
 }
