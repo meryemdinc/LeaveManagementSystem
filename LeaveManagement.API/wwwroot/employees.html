@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çalışan Yönetimi - NovaLeave</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+    <div class="d-flex" id="wrapper">
+        <div class="bg-dark text-white border-end" id="sidebar-wrapper">
+            <div class="sidebar-heading text-center py-4 fs-4 fw-bold border-bottom">NovaLeave 🚀</div>
+            <div class="list-group list-group-flush my-3">
+                <a href="dashboard.html" class="list-group-item list-group-item-action bg-transparent text-white">
+                    <i class="bi bi-speedometer2 me-2"></i> İzin Yönetimi
+                </a>
+                <a href="employees.html" class="list-group-item list-group-item-action bg-transparent text-white active">
+                    <i class="bi bi-people me-2"></i> Çalışanlar
+                </a>
+                <a href="#" id="btnLogout" class="list-group-item list-group-item-action bg-transparent text-danger fw-bold mt-5">
+                    <i class="bi bi-box-arrow-left me-2"></i> Çıkış Yap
+                </a>
+            </div>
+        </div>
+
+        <div id="page-content-wrapper" class="w-100">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom px-3 shadow-sm">
+                <div class="ms-auto fw-bold text-primary" id="userInfo">Yükleniyor...</div>
+            </nav>
+
+            <div class="container-fluid px-4 mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="text-secondary fw-bold">Çalışan Listesi</h2>
+                    
+                    <div>
+                        <input type="file" id="excelInput" accept=".xlsx, .xls" style="display: none;" onchange="uploadExcel()">
+
+                        <button class="btn btn-secondary me-2" onclick="downloadTemplate()">
+                            <i class="bi bi-file-earmark-arrow-down-fill me-1"></i> Şablon İndir
+                        </button>
+
+                        <button class="btn btn-warning text-white me-2" onclick="document.getElementById('excelInput').click()">
+                            <i class="bi bi-cloud-upload-fill me-1"></i> Excel Yükle
+                        </button>
+
+                        <button class="btn btn-success me-2" onclick="downloadExcel()">
+                            <i class="bi bi-file-earmark-excel-fill me-1"></i> Excel İndir
+                        </button>
+                        
+                        <button class="btn btn-primary" onclick="openEmployeeModal()">
+                            <i class="bi bi-person-plus-fill me-1"></i> Yeni Çalışan Ekle
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-3">
+                    <div class="card-body p-0">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-3">Ad Soyad</th>
+                                    <th>E-Posta</th>
+                                    <th>Rol</th>
+                                    <th>İzin Hakkı</th>
+                                    <th class="text-end pe-3">İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employeesTableBody">
+                                <tr><td colspan="5" class="text-center py-4">Yükleniyor...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="employeeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="employeeModalTitle">Yeni Çalışan</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="employeeForm">
+                        <input type="hidden" id="empId"> <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Ad</label>
+                                <input type="text" class="form-control" id="firstName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Soyad</label>
+                                <input type="text" class="form-control" id="lastName" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">E-Posta</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+                        <div class="mb-3" id="passwordDiv">
+                            <label class="form-label">Şifre</label>
+                            <input type="password" class="form-control" id="password">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Rol</label>
+                                <select class="form-select" id="role">
+                                    <option value="Employee">Employee</option>
+                                    <option value="Admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">İzin Hakkı (Gün)</label>
+                                <input type="number" class="form-control" id="allowance" value="14">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Kaydet</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="historyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">İzin Geçmişi</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Tür</th>
+                                <th>Tarihler</th>
+                                <th>Gün</th>
+                                <th>Durum</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/config.js"></script>
+    <script src="js/employees.js"></script>
+</body>
+</html>
