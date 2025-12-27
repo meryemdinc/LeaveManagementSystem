@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaLeave - Ana Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+    <div class="d-flex" id="wrapper">
+        <div class="bg-dark text-white border-end" id="sidebar-wrapper">
+            <div class="sidebar-heading text-center py-4 fs-4 fw-bold border-bottom">NovaLeave 🚀</div>
+            <div class="list-group list-group-flush my-3">
+                <a href="#" class="list-group-item list-group-item-action bg-transparent text-white active">
+                    <i class="bi bi-speedometer2 me-2"></i> İzin Yönetimi
+                </a>
+                
+                <div id="adminMenu" class="d-none">
+                   <a href="employees.html" class="list-group-item list-group-item-action bg-transparent text-white">
+    <i class="bi bi-people me-2"></i> Çalışanlar
+</a>
+                    <a href="#" class="list-group-item list-group-item-action bg-transparent text-white">
+                        <i class="bi bi-bar-chart me-2"></i> Raporlar
+                    </a>
+                </div>
+
+                <a href="#" id="btnLogout" class="list-group-item list-group-item-action bg-transparent text-danger fw-bold mt-5">
+                    <i class="bi bi-box-arrow-left me-2"></i> Çıkış Yap
+                </a>
+            </div>
+        </div>
+
+        <div id="page-content-wrapper" class="w-100">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom px-3 shadow-sm">
+                <button class="btn btn-primary" id="menu-toggle"><i class="bi bi-list"></i></button>
+                <div class="ms-auto fw-bold text-primary" id="userInfo">Yükleniyor...</div>
+            </nav>
+
+            <div class="container-fluid px-4 mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="text-secondary fw-bold">İzin Talepleri</h2>
+                    <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#createLeaveModal">
+                        <i class="bi bi-plus-circle me-1"></i> Yeni İzin Talebi
+                    </button>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-3">
+                    <div class="card-body p-0">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="py-3 ps-3">Çalışan</th>
+                                    <th>İzin Türü</th>
+                                    <th>Başlangıç</th>
+                                    <th>Bitiş</th>
+                                    <th>Durum</th>
+                                    <th class="text-end pe-3">İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaveTableBody">
+                                <tr><td colspan="6" class="text-center py-4 text-muted">Veriler yükleniyor...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="createLeaveModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Yeni İzin Talebi Oluştur</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createLeaveForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">İzin Türü</label>
+                            <select class="form-select" id="leaveTypeId" required>
+                                <option value="1">Yıllık İzin</option>
+                                <option value="2">Mazeret İzni</option>
+                                <option value="3">Hastalık İzni</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Başlangıç</label>
+                                <input type="datetime-local" class="form-control" id="startDate" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Bitiş</label>
+                                <input type="datetime-local" class="form-control" id="endDate" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Açıklama</label>
+                            <textarea class="form-control" id="reason" rows="3" placeholder="İzin nedeninizi belirtin..." required></textarea>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Talebi Gönder</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script src="js/config.js"></script>
+    <script src="js/dashboard.js"></script> 
+</body>
+</html>
