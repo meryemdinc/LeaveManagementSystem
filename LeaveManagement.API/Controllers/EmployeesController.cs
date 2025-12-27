@@ -163,6 +163,53 @@ namespace LeaveManagement.API.Controllers
                 }
             }
         }
+
+        // GET: api/Employees/Export/Template
+        [HttpGet("Export/Template")]
+        public IActionResult DownloadTemplate()
+        {
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Personel_Sablonu");
+
+                // 1. BAŞLIKLAR (Import mantığımızla birebir aynı sırada olmalı)
+                // Hatırlatma: Import kodunda 1. sütunu (ID) atlayıp 2'den başlıyorduk.
+                worksheet.Cell(1, 1).Value = "ID (Boş Bırakın)";
+                worksheet.Cell(1, 2).Value = "Ad";
+                worksheet.Cell(1, 3).Value = "Soyad";
+                worksheet.Cell(1, 4).Value = "E-Posta";
+                worksheet.Cell(1, 5).Value = "Rol (Employee/Admin)";
+                worksheet.Cell(1, 6).Value = "İzin Hakkı";
+
+                // Başlık Stili
+                var headerRange = worksheet.Range("A1:F1");
+                headerRange.Style.Font.Bold = true;
+                headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+
+                // 2. ÖRNEK VERİ (Kullanıcı ne yazacağını anlasın diye)
+                worksheet.Cell(2, 1).Value = ""; // ID boş
+                worksheet.Cell(2, 2).Value = "Ahmet";
+                worksheet.Cell(2, 3).Value = "Yılmaz";
+                worksheet.Cell(2, 4).Value = "ahmet.yilmaz@ornek.com";
+                worksheet.Cell(2, 5).Value = "Employee";
+                worksheet.Cell(2, 6).Value = 14;
+
+                // Sütunları genişlet
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+
+                    return File(
+                        content,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        "Personel_Yukleme_Sablonu.xlsx");
+                }
+            }
+        }
+
         // POST: api/Employees/Import/Excel
         [HttpPost("Import/Excel")]
         public async Task<ActionResult> ImportExcel(IFormFile file)
