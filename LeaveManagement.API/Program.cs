@@ -106,6 +106,7 @@ namespace LeaveManagement.API
                     c.SwaggerEndpoint("/swagger/v1/swagger.json", "LeaveManagement API V1");
                 });
             }
+            app.UseStaticFiles();
 
             app.UseHttpsRedirection();
 
